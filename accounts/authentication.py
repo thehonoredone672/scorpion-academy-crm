@@ -21,10 +21,9 @@ class MongoJWTAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.headers.get("Authorization")
 
+        # Allow public endpoints like login/register
         if not auth_header:
-            raise exceptions.AuthenticationFailed(
-                "Authentication credentials were not provided."
-            )
+            return None
 
         try:
             header_parts = auth_header.split()
