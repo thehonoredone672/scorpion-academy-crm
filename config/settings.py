@@ -47,15 +47,14 @@ INSTALLED_APPS = [
     'sports',
     'students',
     'finance',
-    'leads',  # Ensure leads module app structure is registered explicitly
+    'leads',  
 ]
 
 # 4. Request-Response Pipeline Processing Rules (Middleware)
-# WhiteNoise handles streaming production static files without needing Nginx/Apache config
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # <--- Insert right under security middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Production static asset handler
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -69,7 +68,8 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # FIXED: Added the path to your frontend HTML files
+        'DIRS': [BASE_DIR / 'frontend'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -109,8 +109,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Turn on compressed caching for static elements to boost load times
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# FIXED: Upgraded static storage settings to match standard Django 4.2+ patterns
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -130,10 +137,11 @@ REST_FRAMEWORK = {
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
- CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOW_ALL_ORIGINS = False
 
+# FIXED: Cleaned up placeholder urls to ensure steady cross-origin functionality
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend-domain.com",
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
     "https://scorpion-academy-crm-qwe4.onrender.com",
 ]
-    
