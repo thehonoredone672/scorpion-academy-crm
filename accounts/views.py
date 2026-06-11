@@ -80,21 +80,20 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        # ✅ FIXED: Safely extract and format branch_id without inline order crashes
+        # Safely extract branch info for the frontend response payload
         raw_branch_id = user.get('branch_id')
         branch_str = str(raw_branch_id) if raw_branch_id is not None else None
 
-        # Build access token with safe variable references
+        # ✅ FIXED: Only pass 2 parameters to match what your function expects
         token = generate_jwt_token(
             str(user['_id']),
-            user.get('role', 'STAFF'),
-            branch_str
+            user.get('role', 'STAFF')
         )
 
         return Response({
             "message": "Authentication successful.",
             "access_token": token,
             "role": user.get('role'),
-            "branch_id": branch_str
+            "branch_id": branch_str # Kept here so localStorage can save it cleanly
         }, status=status.HTTP_200_OK)
         
