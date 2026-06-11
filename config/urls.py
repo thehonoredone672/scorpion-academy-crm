@@ -1,7 +1,48 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
-from django.views.generic import TemplateView
+from django.shortcuts import render  # Custom import for direct file rendering
+
+from sports.views_scheduling import BatchSchedulingView
+from sports.views_progression import ProgressionEngineView
+from students.views_enrollments import StudentEnrollmentView
+from students.views_attendance import LiveAttendanceCheckInView
+from finance.views import InvoiceCreatePaymentView
+
+# 1. Define explicit rendering functions for your frontend pages
+def login_view(request):
+    return render(request, 'login.html')
+
+def dashboard_view(request):
+    return render(request, 'dashboard.html')
+
+def attendance_view(request):
+    return render(request, 'attendance.html')
+
+def batches_view(request):
+    return render(request, 'batches.html')
+
+def events_view(request):
+    return render(request, 'events.html')
+
+def exams_view(request):
+    return render(request, 'exams.html')
+
+def fees_view(request):
+    return render(request, 'fees.html')
+
+def leads_view(request):
+    return render(request, 'leads.html')
+
+def settings_view(request):
+    return render(request, 'settings.html')
+
+def students_view(request):
+    return render(request, 'students.html')
+
+def vault_view(request):
+    return render(request, 'vault.html')
+
 
 def home(request):
     """Optional live status path for Render monitoring"""
@@ -13,31 +54,23 @@ def home(request):
 
 
 urlpatterns = [
-    # 🌟 CORE FRONTEND PAGES MAP 🌟
-    # Root URL serves the login page
-    path('', TemplateView.as_view(template_name='login.html'), name='login_page'),
-    
-    # Dashboard & Management Sections
-    path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='dashboard_page'),
-    path('attendance/', TemplateView.as_view(template_name='attendance.html'), name='attendance_page'),
-    path('batches/', TemplateView.as_view(template_name='batches.html'), name='batches_page'),
-    path('events/', TemplateView.as_view(template_name='events.html'), name='events_page'),
-    path('exams/', TemplateView.as_view(template_name='exams.html'), name='exams_page'),
-    path('fees/', TemplateView.as_view(template_name='fees.html'), name='fees_page'),
-    path('leads/', TemplateView.as_view(template_name='leads.html'), name='leads_page'),
-    path('settings/', TemplateView.as_view(template_name='settings.html'), name='settings_page'),
-    path('students/', TemplateView.as_view(template_name='students.html'), name='students_page'),
-    path('vault/', TemplateView.as_view(template_name='vault.html'), name='vault_page'),
+    # 🌟 CORE FRONTEND PAGES MAP (Explicitly rendered) 🌟
+    path('', login_view, name='login_page'),
+    path('dashboard/', dashboard_view, name='dashboard_page'),
+    path('attendance/', attendance_view, name='attendance_page'),
+    path('batches/', batches_view, name='batches_page'),
+    path('events/', events_view, name='events_page'),
+    path('exams/', exams_view, name='exams_page'),
+    path('fees/', fees_view, name='fees_page'),
+    path('leads/', leads_view, name='leads_page'),
+    path('settings/', settings_view, name='settings_page'),
+    path('students/', students_view, name='students_page'),
+    path('vault/', vault_view, name='vault_page'),
 
 
     # ⚙️ BACKEND API ENDPOINTS ⚙️
-    # System Status
     path('api/status/', home, name='api_status'),
-
-    # Admin Panel
     path('admin/', admin.site.urls),
-
-    # Authentication
     path('api/auth/', include('accounts.urls')),
 
     # Core Modules
