@@ -12,7 +12,6 @@ class RegisterAdminView(APIView):
     """
     Provisioning engine for the global Super Admin accounts.
     """
-
     authentication_classes = []
     permission_classes = [AllowAny]
 
@@ -57,7 +56,6 @@ class LoginView(APIView):
     """
     Validates credentials and issues an access token.
     """
-
     authentication_classes = []
     permission_classes = [AllowAny]
 
@@ -82,15 +80,21 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+        # ✅ FIXED: Safely extract and format branch_id without inline order crashes
+        raw_branch_id = user.get('branch_id')
+        branch_str = str(raw_branch_id) if raw_branch_id is not None else None
+
+        # Build access token with safe variable references
         token = generate_jwt_token(
             str(user['_id']),
             user.get('role', 'STAFF'),
-            str(user.get('branch_id')) if user.get('branch_id') else None
+            branch_str
         )
 
         return Response({
             "message": "Authentication successful.",
             "access_token": token,
             "role": user.get('role'),
-            "branch_id": str(user.get('branch_id')) if user.get('branch_id') else None
+            "branch_id": branch_str
         }, status=status.HTTP_200_OK)
+        
