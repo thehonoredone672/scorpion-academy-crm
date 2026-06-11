@@ -18,7 +18,7 @@ if not SECRET_KEY:
     raise ValueError("CRITICAL: SECRET_KEY is missing from environment variables!")
 
 # Explicit string-to-boolean translation preventing logical fallbacks
-DEBUG = os.getenv("DEBUG", "False").strip().lower() in ["true", "1", "yes"]
+DEBUG = True
 
 # Dynamic Host Resolution Matrix mapping
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "localhost:5500"]
