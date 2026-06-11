@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scorpion Academy | Overview Metrics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #FAFAFA; color: #111111; }
@@ -17,7 +17,8 @@
 
     <script>
         const token = localStorage.getItem('scorp_token');
-        if (!token) window.location.href = 'login.html';
+        // FIXED: Redirect unauthorized sessions back to clean root routing address
+        if (!token) window.location.href = '/';
     </script>
 
     <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-30 md:hidden" onclick="toggleMobileSidebar()"></div>
@@ -37,25 +38,25 @@
         </div>
 
         <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-            <a href="dashboard.html" class="flex items-center gap-2.5 px-2.5 py-1.5 bg-white/10 text-white rounded-md transition-colors font-medium">
+            <a href="/dashboard/" class="flex items-center gap-2.5 px-2.5 py-1.5 bg-white/10 text-white rounded-md transition-colors font-medium">
                 <i class="ph-fill ph-squares-four text-base"></i> Overview Metrics
             </a>
-            <a href="leads.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
+            <a href="/leads/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
                 <i class="ph ph-funnel text-base"></i> Lead Management
             </a>
-            <a href="students.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
+            <a href="/students/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
                 <i class="ph ph-student text-base"></i> Students
             </a>
-            <a href="batches.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
+            <a href="/batches/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
                 <i class="ph ph-calendar text-base"></i> Batch Management
             </a>
-            <a href="attendance.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
+            <a href="/attendance/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
                 <i class="ph ph-notebook text-base"></i> Attendance Log
             </a>
-            <a href="fees.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
+            <a href="/fees/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
                 <i class="ph ph-wallet text-base"></i> Fee Accounting
             </a>
-            <a href="exams.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
+            <a href="/exams/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium">
                 <i class="ph ph-certificate text-base"></i> Belt Examinations
             </a>
         </nav>
@@ -105,6 +106,7 @@
 
     <script>
         const authHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+        
         function toggleMobileSidebar() {
             document.getElementById('mainSidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarBackdrop').classList.toggle('hidden');
@@ -112,21 +114,30 @@
 
         async function loadOverviewMetrics() {
             try {
+                // FIXED: Changed hardcoded localhost endpoints to absolute system relative paths
                 const [studentsRes, ledgerRes] = await Promise.all([
-                    fetch('http://127.0.0.1:8000/api/students/', { headers: authHeaders }),
-                    fetch('http://127.0.0.1:8000/api/finance/ledger/', { headers: authHeaders })
+                    fetch('/api/students/', { headers: authHeaders }),
+                    fetch('/api/finance/ledger/', { headers: authHeaders })
                 ]);
+                
                 if (studentsRes.ok && ledgerRes.ok) {
                     const students = await studentsRes.json();
                     const ledger = await ledgerRes.json();
-                    document.getElementById('dashTotalStudents').textContent = students.length;
-                    let balanceSum = ledger.reduce((acc, curr) => acc + (curr.type === 'DEBIT' ? parseFloat(curr.amount) : -parseFloat(curr.amount)), 0);
+                    
+                    document.getElementById('dashTotalStudents').textContent = Array.isArray(students) ? students.length : 0;
+                    
+                    let balanceSum = 0;
+                    if (Array.isArray(ledger)) {
+                        balanceSum = ledger.reduce((acc, curr) => acc + (curr.type === 'DEBIT' ? parseFloat(curr.amount || 0) : -parseFloat(curr.amount || 0)), 0);
+                    }
                     document.getElementById('dashTotalRevenue').textContent = `₹${balanceSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error('Error streaming cloud parameters:', err); }
         }
 
-        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+        // FIXED: Re-mapped session terminations back to root url routing context
+        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
+        
         const role = localStorage.getItem('scorp_role');
         document.getElementById('roleDisplay').textContent = role ? role.replace('_', ' ') : 'VISITOR';
         loadOverviewMetrics();
