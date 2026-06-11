@@ -16,11 +16,6 @@
 </head>
 <body class="flex h-screen overflow-hidden text-[13px] antialiased selection:bg-gray-200 selection:text-black relative">
 
-    <script>
-        const token = localStorage.getItem('scorp_token');
-        if (!token) window.location.href = 'login.html';
-    </script>
-
     <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-30 md:hidden" onclick="toggleMobileSidebar()"></div>
 
     <aside id="mainSidebar" class="fixed inset-y-0 left-0 w-60 bg-[#0A0A0A] border-r border-white/10 flex flex-col shrink-0 z-40 transform -translate-x-full transition-transform duration-200 md:relative md:translate-x-0">
@@ -32,13 +27,13 @@
             <button onclick="toggleMobileSidebar()" class="text-gray-400 hover:text-white md:hidden p-1"><i class="ph ph-caret-left text-lg"></i></button>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-            <a href="dashboard.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-squares-four text-base"></i> Overview Metrics</a>
-            <a href="leads.html" class="flex items-center gap-2.5 px-2.5 py-1.5 bg-white/10 text-white rounded-md transition-colors font-medium"><i class="ph-fill ph-funnel text-base"></i> Lead Management</a>
-            <a href="students.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-student text-base"></i> Students</a>
-            <a href="batches.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-calendar text-base"></i> Batch Management</a>
-            <a href="attendance.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-notebook text-base"></i> Attendance Log</a>
-            <a href="fees.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-wallet text-base"></i> Fee Accounting</a>
-            <a href="exams.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-certificate text-base"></i> Belt Examinations</a>
+            <a href="/dashboard/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-squares-four text-base"></i> Overview Metrics</a>
+            <a href="/leads/" class="flex items-center gap-2.5 px-2.5 py-1.5 bg-white/10 text-white rounded-md transition-colors font-medium"><i class="ph-fill ph-funnel text-base"></i> Lead Management</a>
+            <a href="/students/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-student text-base"></i> Students</a>
+            <a href="/batches/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-calendar text-base"></i> Batch Management</a>
+            <a href="/attendance/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-notebook text-base"></i> Attendance Log</a>
+            <a href="/fees/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-wallet text-base"></i> Fee Accounting</a>
+            <a href="/exams/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-certificate text-base"></i> Belt Examinations</a>
         </nav>
         <div class="p-4 border-t border-white/5"><button id="logoutBtn" class="flex items-center gap-2 w-full px-2.5 py-1.5 text-gray-400 hover:text-white text-left"><i class="ph ph-sign-out text-base"></i> Terminate Link</button></div>
     </aside>
@@ -104,7 +99,12 @@
     </div>
 
     <script>
+        // FIXED: Shifted authorization session token validation to execute sequentially first
+        const token = localStorage.getItem('scorp_token');
+        if (!token) window.location.href = '/';
+
         const authHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+        
         function toggleMobileSidebar() {
             document.getElementById('mainSidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarBackdrop').classList.toggle('hidden');
@@ -116,21 +116,23 @@
             const body = document.getElementById('leadsTableBody');
             body.innerHTML = `<tr><td colspan="4" class="p-5 text-gray-400 text-center animate-pulse">Reading lead architecture logs...</td></tr>`;
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/leads/', { headers: authHeaders });
+                // FIXED: Stripped out hardcoded localhost parameters to resolve absolute cloud context pathing
+                const res = await fetch('/api/leads/', { headers: authHeaders });
                 if(res.ok) {
                     const leads = await res.json();
                     body.innerHTML = '';
-                    if(leads.length === 0) { body.innerHTML = `<tr><td colspan="4" class="p-5 text-center text-gray-400">Pipeline empty.</td></tr>`; return;}
+                    if(!Array.isArray(leads) || leads.length === 0) { body.innerHTML = `<tr><td colspan="4" class="p-5 text-center text-gray-400">Pipeline empty.</td></tr>`; return;}
                     leads.reverse().forEach(l => {
-                        body.innerHTML += `<tr class="hover:bg-gray-50/50 transition-colors"><td class="px-5 py-3 font-semibold text-gray-900">${l.name}</td><td class="px-5 py-3 text-gray-500 font-mono">${l.phone}</td><td class="px-5 py-3 text-gray-600">${l.program || 'General Inquiry'}</td><td class="px-5 py-3 text-right"><span class="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-700 rounded text-[10px] font-bold tracking-wider">${l.status}</span></td></tr>`;
+                        body.innerHTML += `<tr class="hover:bg-gray-50/50 transition-colors"><td class="px-5 py-3 font-semibold text-gray-900">${l.name || 'Unnamed Lead'}</td><td class="px-5 py-3 text-gray-500 font-mono">${l.phone || '—'}</td><td class="px-5 py-3 text-gray-600">${l.program || 'General Inquiry'}</td><td class="px-5 py-3 text-right"><span class="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-700 rounded text-[10px] font-bold tracking-wider">${l.status || 'NEW'}</span></td></tr>`;
                     });
                 }
-            } catch(e) { body.innerHTML = `<tr><td colspan="4" class="p-5 text-red-500">Read execution failure.</td></tr>`; }
+            } catch(e) { body.innerHTML = `<tr><td colspan="4" class="p-5 text-red-500 text-center">Read execution failure. System storage partition disconnected.</td></tr>`; }
         }
 
         async function exportLeads() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/export/leads/', {
+                // FIXED: Swapped endpoints to a unified relative system mapping layout
+                const response = await fetch('/api/export/leads/', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -144,7 +146,7 @@
                     a.click();
                     a.remove();
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error('Export operations fault:', err); }
         }
 
         document.getElementById('leadForm').addEventListener('submit', async function(e) {
@@ -159,9 +161,10 @@
                 status: document.getElementById('l_status').value
             };
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/leads/', { method: 'POST', headers: authHeaders, body: JSON.stringify(payload) });
+                // FIXED: Set target pathing context to cloud relative patterns
+                const res = await fetch('/api/leads/', { method: 'POST', headers: authHeaders, body: JSON.stringify(payload) });
                 if(res.ok) { closeLeadModal(); loadLeadsData(); }
-            } catch(err) { console.error(err); }
+            } catch(err) { console.error('Record insertion crash:', err); }
         });
 
         function searchLeads() {
@@ -171,7 +174,8 @@
             });
         }
 
-        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+        // FIXED: Re-targeted window location reference back to the global routing root location
+        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         loadLeadsData();
     </script>
 </body>
