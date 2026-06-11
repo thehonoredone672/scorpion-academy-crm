@@ -1,20 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
-from django.views.generic import TemplateView  # Standard view module for direct template parsing
-
-from sports.views_progression import ProgressionEngineView
-from students.views_enrollments import StudentEnrollmentView
-from sports.views_scheduling import BatchSchedulingView
-from students.views_attendance import LiveAttendanceCheckInView
-from finance.views import InvoiceCreatePaymentView
-
+from django.views.generic import TemplateView
 
 def home(request):
-    """
-    Optional API status health check view.
-    Moved from root path to keep system visibility separate from UI routing.
-    """
+    """Optional live status path for Render monitoring"""
     return JsonResponse({
         "status": "online",
         "application": "Scorpion Academy CRM",
@@ -23,10 +13,25 @@ def home(request):
 
 
 urlpatterns = [
-    # FIXED: Root URL now processes your custom frontend login.html directly
+    # 🌟 CORE FRONTEND PAGES MAP 🌟
+    # Root URL serves the login page
     path('', TemplateView.as_view(template_name='login.html'), name='login_page'),
+    
+    # Dashboard & Management Sections
+    path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='dashboard_page'),
+    path('attendance/', TemplateView.as_view(template_name='attendance.html'), name='attendance_page'),
+    path('batches/', TemplateView.as_view(template_name='batches.html'), name='batches_page'),
+    path('events/', TemplateView.as_view(template_name='events.html'), name='events_page'),
+    path('exams/', TemplateView.as_view(template_name='exams.html'), name='exams_page'),
+    path('fees/', TemplateView.as_view(template_name='fees.html'), name='fees_page'),
+    path('leads/', TemplateView.as_view(template_name='leads.html'), name='leads_page'),
+    path('settings/', TemplateView.as_view(template_name='settings.html'), name='settings_page'),
+    path('students/', TemplateView.as_view(template_name='students.html'), name='students_page'),
+    path('vault/', TemplateView.as_view(template_name='vault.html'), name='vault_page'),
 
-    # Optional: Dedicated live status path for Render monitoring
+
+    # ⚙️ BACKEND API ENDPOINTS ⚙️
+    # System Status
     path('api/status/', home, name='api_status'),
 
     # Admin Panel
