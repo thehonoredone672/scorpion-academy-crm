@@ -148,13 +148,14 @@
             btn.disabled = true;
 
             try {
-                // FIXED: Changed absolute Render URL to a clean relative endpoint path
+                // FIXED: Enforced strict trailing slash layout with clean relative routing mapping
                 const response = await fetch(
-                    '/api/auth/login',
+                    '/api/auth/login/',
                     {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             email: email,
@@ -163,51 +164,36 @@
                     }
                 );
 
-                const data = await response.json();
-
-                if (response.ok) {
-
-                    localStorage.setItem(
-                        'scorp_token',
-                        data.access_token
-                    );
-
-                    localStorage.setItem(
-                        'scorp_role',
-                        data.role
-                    );
-
-                    if (data.branch_id) {
-                        localStorage.setItem(
-                            'scorp_branch_id',
-                            data.branch_id
-                        );
-                    }
-
-                    // FIXED: Changed from 'dashboard.html' to Django's clean router URL
-                    window.location.href = '/dashboard/';
-
-                } else {
-
-                    errorBox.textContent =
-                        data.error ||
-                        data.detail ||
-                        'ACCESS REJECTED';
-
-                    errorBox.classList.remove('hidden');
+                // FIXED: Transparent handling to intercept non-200 states before parsing
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || errorData.detail || `HTTP ERROR Status: ${response.status}`);
                 }
 
+                const data = await response.json();
+
+                localStorage.setItem('scorp_token', data.access_token);
+                localStorage.setItem('scorp_role', data.role);
+
+                if (data.branch_id) {
+                    localStorage.setItem('scorp_branch_id', data.branch_id);
+                }
+
+                window.location.href = '/dashboard/';
+
             } catch (err) {
-
                 console.error(err);
-
-                errorBox.textContent =
-                    'GATEWAY ERROR: UNABLE TO CONNECT TO SERVER';
+                
+                // FIXED: Differentiates connection faults from concrete API execution alerts
+                if (err.message.includes('HTTP ERROR')) {
+                    errorBox.textContent = err.message.toUpperCase();
+                } else {
+                    errorBox.textContent = 'GATEWAY ERROR: UNABLE TO CONNECT TO SERVER';
+                }
 
                 errorBox.classList.remove('hidden');
 
             } finally {
-
                 btn.textContent = 'AUTHENTICATE';
                 btn.disabled = false;
             }
