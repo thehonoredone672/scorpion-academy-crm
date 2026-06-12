@@ -16,11 +16,6 @@
 </head>
 <body class="flex h-screen overflow-hidden text-[13px] antialiased selection:bg-gray-200 selection:text-black relative">
 
-    <script>
-        const token = localStorage.getItem('scorp_token');
-        if (!token) window.location.href = 'login.html';
-    </script>
-
     <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-30 md:hidden" onclick="toggleMobileSidebar()"></div>
 
     <aside id="mainSidebar" class="fixed inset-y-0 left-0 w-60 bg-[#0A0A0A] border-r border-white/10 flex flex-col shrink-0 z-40 transform -translate-x-full transition-transform duration-200 md:relative md:translate-x-0">
@@ -32,13 +27,13 @@
             <button onclick="toggleMobileSidebar()" class="text-gray-400 hover:text-white md:hidden p-1"><i class="ph ph-caret-left text-lg"></i></button>
         </div>
         <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-            <a href="dashboard.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-squares-four text-base"></i> Overview Metrics</a>
-            <a href="leads.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-funnel text-base"></i> Lead Management</a>
-            <a href="students.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-student text-base"></i> Students</a>
-            <a href="batches.html" class="flex items-center gap-2.5 px-2.5 py-1.5 bg-white/10 text-white rounded-md transition-colors font-medium"><i class="ph-fill ph-calendar text-base"></i> Batch Management</a>
-            <a href="attendance.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-notebook text-base"></i> Attendance Log</a>
-            <a href="fees.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-wallet text-base"></i> Fee Accounting</a>
-            <a href="exams.html" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-certificate text-base"></i> Belt Examinations</a>
+            <a href="/dashboard/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-squares-four text-base"></i> Overview Metrics</a>
+            <a href="/leads/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-funnel text-base"></i> Lead Management</a>
+            <a href="/students/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-student text-base"></i> Students</a>
+            <a href="/batches/" class="flex items-center gap-2.5 px-2.5 py-1.5 bg-white/10 text-white rounded-md transition-colors font-medium"><i class="ph-fill ph-calendar text-base"></i> Batch Management</a>
+            <a href="/attendance/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-notebook text-base"></i> Attendance Log</a>
+            <a href="/fees/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-wallet text-base"></i> Fee Accounting</a>
+            <a href="/exams/" class="flex items-center gap-2.5 px-2.5 py-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-md transition-colors font-medium"><i class="ph ph-certificate text-base"></i> Belt Examinations</a>
         </nav>
         <div class="p-4 border-t border-white/5"><button id="logoutBtn" class="flex items-center gap-2 w-full px-2.5 py-1.5 text-gray-400 hover:text-white text-left"><i class="ph ph-sign-out text-base"></i> Terminate Link</button></div>
     </aside>
@@ -77,7 +72,12 @@
     </div>
 
     <script>
+        // FIXED: Combined authorization checkpoint seamlessly within execution context thread
+        const token = localStorage.getItem('scorp_token');
+        if (!token) window.location.href = '/';
+
         const authHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+        
         function toggleMobileSidebar() {
             document.getElementById('mainSidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarBackdrop').classList.toggle('hidden');
@@ -89,29 +89,50 @@
             const grid = document.getElementById('batchGrid');
             grid.innerHTML = `<p class="text-gray-400 animate-pulse col-span-full">Syncing training partitions...</p>`;
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/branches/', { headers: authHeaders }); // Re-routed via local configurations
+                // FIXED: Reset hardcoded paths to leverage your clean relative scheduling view path configuration
+                const res = await fetch('/api/sports/scheduling/batches/', { headers: authHeaders });
                 if(res.ok) {
-                    const branches = await res.json();
+                    const batches = await res.json();
                     grid.innerHTML = '';
-                    if(branches.length === 0) { grid.innerHTML = `<p class="text-gray-400 col-span-full">No active batches mapped.</p>`; return; }
-                    branches.forEach(b => {
+                    if(!Array.isArray(batches) || batches.length === 0) { grid.innerHTML = `<p class="text-gray-400 col-span-full">No active batches mapped inside cluster storage.</p>`; return; }
+                    batches.forEach(b => {
                         grid.innerHTML += `
                             <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col justify-between">
                                 <div>
                                     <div class="flex justify-between items-start mb-2">
-                                        <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[9px] font-bold uppercase">${b.branch_code}</span>
-                                        <span class="text-xs font-semibold text-gray-900">Live Track</span>
+                                        <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[9px] font-bold uppercase">${b.sport_track || b.sport || 'TRACK'}</span>
+                                        <span class="text-xs font-semibold text-gray-900">${b.start_time || '—'} - ${b.end_time || '—'}</span>
                                     </div>
-                                    <h3 class="text-sm font-semibold text-gray-900">${b.name}</h3>
-                                    <p class="text-[11px] text-gray-400 mt-1">Location: ${b.address.city}</p>
+                                    <h3 class="text-sm font-semibold text-gray-900">${b.name || 'Unnamed Batch'}</h3>
+                                    <p class="text-[11px] text-gray-400 mt-1">Status: <span class="text-green-600 font-medium">Active Session</span></p>
                                 </div>
                             </div>`;
                     });
                 }
-            } catch(e) { grid.innerHTML = `<p class="text-red-500 col-span-full">API Context drop.</p>`; }
+            } catch(e) { grid.innerHTML = `<p class="text-red-500 col-span-full">API Context drop. Unable to connect to storage array.</p>`; }
         }
 
-        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+        document.getElementById('batchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('b_name').value.trim(),
+                sport: document.getElementById('b_sport').value.trim(),
+                start_time: document.getElementById('b_start').value.trim(),
+                end_time: document.getElementById('b_end').value.trim()
+            };
+            try {
+                // FIXED: Aligned POST endpoints with production layout specifications
+                const res = await fetch('/api/sports/scheduling/batches/', { 
+                    method: 'POST', 
+                    headers: authHeaders, 
+                    body: JSON.stringify(payload) 
+                });
+                if(res.ok) { closeBatchModal(); fetchBatches(); }
+            } catch(err) { console.error('Batch commit exception:', err); }
+        });
+
+        // FIXED: Pointed window redirection targets back to clean framework location root
+        document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '/'; });
         fetchBatches();
     </script>
 </body>
